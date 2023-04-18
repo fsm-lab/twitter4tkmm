@@ -237,8 +237,3 @@ if __name__ == "__main__":
     search_type = "followers"
     GET_FOLLOWS(csv_name,search_type)
 
-
-
-
-
-import pickle
