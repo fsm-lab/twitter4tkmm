@@ -58,14 +58,14 @@ def get_tweet(twitter_id,search_type,follow_count,follower_count):
     for i in range(SCROLL_COUNT):
         
         id_list = get_user_id(id_list)
-        print(id_list)
+        print(len(id_list))
         scroll_to_elem()
 
         # ○秒間待つ（サイトに負荷を与えないと同時にコンテンツの読み込み待ち）
         time.sleep(SCROLL_WAIT_TIME) 
 
         #id_listが垢のfollower数と一緒なら終了判定
-        if len(id_list) == int(follower_count):
+        if follower_count-15 < len(id_list) < follower_count+15:
             break
 
 
@@ -86,8 +86,8 @@ def count_follow_id(twitter_id):
 
         follower_count = driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[2]/a/span[1]').text
         follow_count = driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[1]/a/span[1]').text
-        print(follower_count,follow_count)
-        print(type(follower_count),type(follow_count))
+        # print(follower_count,follow_count)
+        # print(type(follower_count),type(follow_count))
 
         return translator(follow_count) ,translator(follower_count)
     
@@ -95,14 +95,14 @@ def count_follow_id(twitter_id):
         return "",""
 
 
-#万や億などの表記を日本語に直す
+#万や億などの表記を日本語に直す　1,000などを1000に直す
 def translator(target):
-
-    replaceTable = str.maketrans({'億':'*100000000','万':'*10000','千':'*1000'})
+    target = target.replace(',', '')
+    replaceTable = str.maketrans({'億':'*100000000','万':'*10000'})
     text = str(target)
 
     result = eval(text.translate(replaceTable))
-
+    
     return result
 
 
@@ -153,7 +153,6 @@ def get_user_id(id_list):
 
     for elem_article in elems_article:
         html_text = elem_article.get_attribute('innerHTML')
-        # print(tag)
 
         user_id = split_userID(html_text) #userIDはlist
     
@@ -164,7 +163,7 @@ def get_user_id(id_list):
             if user_id[-1] not in id_list:
                 # twitter_id情報取得                   
                 id_list.append(user_id[-1])
-                print(user_id)
+                # print(user_id)
     
 
     return id_list #,tweet_list
@@ -195,8 +194,8 @@ def GET_FOLLOWS(target_csv_name,search_type):
     file_name = "data\\"+ target_csv_name + ".csv"
     f = open(file_name, 'r')
     id_list = csv.reader(f)
-    print(id_list)
-    print(type(id_list))
+    # print(id_list)
+    # print(type(id_list))
 
     #　ヘッドレスモードでブラウザを起動
     options = Options()
@@ -206,7 +205,7 @@ def GET_FOLLOWS(target_csv_name,search_type):
     # global変数へ代入できるように
     global TWITTER_ID
     for id in id_list:
-        print(id[0])
+        # print(id[0])
         TWITTER_ID = id[0]
         follow_count,follower_count = count_follow_id(TWITTER_ID)
 
@@ -238,3 +237,8 @@ if __name__ == "__main__":
     search_type = "followers"
     GET_FOLLOWS(csv_name,search_type)
 
+
+
+
+
+import pickle
