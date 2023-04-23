@@ -19,7 +19,7 @@ from selenium.common.exceptions import NoSuchElementException
 SCROLL_COUNT = 100000000000000000
 
 SCROLL_WAIT_TIME = 1
-ACOUNT_ID , ACOUNT_PASS = "RnPuseF77mJZpVO", "twitternopas1"
+ACOUNT_ID , ACOUNT_PASS = "FsmlabT", "barabara0811"
 TWITTER_ID = ""
 # -------------------------
 
@@ -45,8 +45,6 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 # -------------------------
 
 
-
-
 def get_follows(target_name, search_type):
     user_count = count_follow_id(target_name)[search_type]
     print(f"{search_type}数：{user_count}")
@@ -55,17 +53,27 @@ def get_follows(target_name, search_type):
     time.sleep(5)
     driver.get(url)
     id_set = set()
-    for i in range(SCROLL_COUNT):
+    id_counts = 0
+    for i in range(SCROLL_COUNT):     
         print(len(id_set))
         ids = get_user_id()
         id_set |= ids
         print(len(id_set), id_set)
         scroll_to_elem()
-        # ○秒間待つ（サイトに負荷を与えないと同時にコンテンツの読み込み待ち）
+        # x秒間待つ（サイトに負荷を与えないと同時にコンテンツの読み込み待ち）
         time.sleep(SCROLL_WAIT_TIME) 
         #id_listが垢のfollower数と一緒なら終了判定
-        if user_count-15 < len(id_set) < user_count+15:
+        if user_count-5 < len(id_set) < user_count+5:
             break
+        if len(id_set) == id_counts:
+            btn = get_reload_button()
+            print(btn)
+            print("読み込み制限のため，15+1分スリープします")
+            time.sleep(960)
+            print("読み込み再開")
+            btn.click()
+
+        id_counts = len(id_set)
 
     file_path = f"{search_type}/{target_name}.txt"
     wfo = open(file_path, "w")
@@ -83,9 +91,9 @@ def count_follow_id(twitter_id):
         follower_count = driver.find_element(By.XPATH, '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[2]/a/span[1]').text
         followee_count = driver.find_element(By.XPATH, '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[5]/div[1]/a/span[1]').text        # print(follower_count,follow_count)
         # print(type(follower_count),type(follow_count))
-        return {"followees": translator(followee_count), "followers": translator(follower_count)}    
+        return {"following": translator(followee_count), "followers": translator(follower_count)}    
     except NoSuchElementException:
-        return {"followees": -1, "followers": -1}
+        return {"following": -1, "followers": -1}
 
 
 #万や億などの表記を日本語に直す　1,000などを1000に直す
@@ -146,6 +154,11 @@ def get_user_id():
     return ids #,tweet_list
 
 
+def get_reload_button():
+    button = driver.find_element(By.CSS_SELECTOR, "#react-root > div > div > div.css-1dbjc4n.r-18u37iz.r-13qz1uu.r-417010 > main > div > div > div > div.css-1dbjc4n.r-14lw9ot.r-jxzhtn.r-1ljd8xs.r-13l2t4g.r-1phboty.r-16y2uox.r-1jgb5lz.r-11wrixw.r-61z16t.r-1ye8kvj.r-13qz1uu.r-184en5c > div > section > div > div > div:nth-child(25) > div > div > div.css-18t94o4.css-1dbjc4n.r-l5o3uw.r-42olwf.r-sdzlij.r-1phboty.r-rs99b7.r-2yi16.r-1qi8awa.r-1ny4l3l.r-ymttw5.r-o7ynqc.r-6416eg.r-lrvibr")
+    return button
+
+
 def split_userID(html_text):
     # 特定の文字列を切り出したい。(ユーザーID)　@0000では複数あるので「>@　~userID~　<」までを指定して切り出したい   ex) r-qvutc0">@shunno0529</span></div></div></a></div>    
     p = r'>@(\w+)</span>'
@@ -155,6 +168,10 @@ def split_userID(html_text):
 
 
 def get_already_got_names():
+    """
+    フォロワー／フォロウィーリストを収集済みのユーザ集合を返す
+    ToDo：未実装
+    """
     user_names = set()
     return user_names
 
